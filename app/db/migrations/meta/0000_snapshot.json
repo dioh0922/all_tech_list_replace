@@ -1,0 +1,106 @@
+{
+  "id": "00000000-0000-0000-0000-000000000000",
+  "prevId": "",
+  "version": "5",
+  "dialect": "mysql",
+  "tables": {
+    "login": {
+      "name": "login",
+      "columns": {
+        "userID": {
+          "autoincrement": false,
+          "name": "userID",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pass": {
+          "autoincrement": false,
+          "name": "pass",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "accept": {
+          "autoincrement": false,
+          "name": "accept",
+          "type": "int(11)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "compositePrimaryKeys": {},
+      "indexes": {},
+      "foreignKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "techlist": {
+      "name": "techlist",
+      "columns": {
+        "ProjectID": {
+          "autoincrement": false,
+          "name": "ProjectID",
+          "type": "int(11)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ProjectName": {
+          "default": "'NULL'",
+          "autoincrement": false,
+          "name": "ProjectName",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "TechName": {
+          "default": "'NULL'",
+          "autoincrement": false,
+          "name": "TechName",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "URL": {
+          "default": "'NULL'",
+          "autoincrement": false,
+          "name": "URL",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "CreateDate": {
+          "default": "'''2019-01-01'''",
+          "autoincrement": false,
+          "name": "CreateDate",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "Repository": {
+          "default": "'NULL'",
+          "autoincrement": false,
+          "name": "Repository",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {},
+      "indexes": {},
+      "foreignKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    }
+  },
+  "views": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "tables": {},
+    "indexes": {}
+  }
+}
