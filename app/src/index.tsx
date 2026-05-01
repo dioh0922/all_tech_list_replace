@@ -4,54 +4,44 @@ import { Hono } from 'hono'
 import { desc } from 'drizzle-orm'
 import { techlist } from '../db/migrations/schema.js'
 import { db } from './db.js'
+import { renderer } from './layout.js'
+import { List } from './components/list.js'
+import { Add } from './components/add.js'
 
 const app = new Hono()
+
+app.use(renderer)
 
 app.get('/', async (c) => {
   const allLists = await db.select()
     .from(techlist)
-    .orderBy(desc(techlist.createDate));
+    .orderBy(desc(techlist.createDate))
+  
   return c.render(
-    <div>
-      <table>
-        <thead>
-          
-          <tr>
-            <th>プロジェクト名</th>
-            <th>主な技術</th>
-            <th>URL</th>
-            <th>作成時期</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          {allLists.map((list) => (
-            <tr key={list.projectId}>
-              <td>{list.projectName}</td>
-              <td>{list.techName}</td>
-              <td>
-                {list.url && (list.url.includes('/') ? (
-                  <a href={list.url}>{list.url}</a>
-                ) : (
-                  list.url
-                ))}
-              </td>
-              <td>{new Date(list.createDate).toLocaleDateString('ja-JP')}</td>
-              <td>
-                <a href={`/edit/${list.projectId}`}>編集</a>
-                <a href={`/delete/${list.projectId}`} onClick={(e) => {
-                  e.preventDefault();
-                  if (confirm('本当に削除しますか？')) {
-                    // TODO: 削除処理をここに追加
-                  }
-                }}>削除</a>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <List allLists={allLists} />
   )
+})
+
+app.get('/add', (c) => {
+  return c.render(<Add/>)
+})
+app.post('/add', async (c) => {
+  const formData = await c.req.formData()
+  const projectName = formData.get('projectName') as string
+  const techName = formData.get('techName') as string
+  const url = formData.get('url') as string
+  const repository = formData.get('repository') as string
+  const createDate = formData.get('createDate') as string
+
+  await db.insert(techlist).values({
+    projectName,
+    techName,
+    url,
+    repository,
+    createDate: new Date(createDate).toISOString().split('T')[0]
+  })
+
+  return c.redirect('/')
 })
 
 serve({

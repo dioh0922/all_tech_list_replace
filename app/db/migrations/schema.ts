@@ -8,7 +8,7 @@ export const login = mysqlTable("login", {
 });
 
 export const techlist = mysqlTable("techlist", {
-	projectId: int("ProjectID").notNull(),
+	projectId: int("ProjectID").primaryKey().autoincrement().notNull(),
 	projectName: text("ProjectName").default('NULL'),
 	techName: text("TechName").default('NULL'),
 	url: text("URL").default('NULL'),
