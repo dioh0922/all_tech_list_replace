@@ -36,15 +36,13 @@ export const List = ({ allLists }: TechListProps) => {
               </td>
               <td>{new Date(list.createDate).toLocaleDateString('ja-JP')}</td>
               <td>
-                <a href={`/edit/${list.projectId}`}>編集</a>
+                <form action={`/edit/${list.projectId}`} method="get">
+                  <input type="submit" value="編集" />
+                </form>
                 {' '}
-                <a href={`/delete/${list.projectId}`} onClick={(e) => {
-                  // Client-side JS would be needed for confirm in a real app, 
-                  // but for now we'll keep the logic consistent with index.tsx
-                  if (!confirm('本当に削除しますか？')) {
-                    e.preventDefault();
-                  }
-                }}>削除</a>
+                <form action={`/delete/${list.projectId}`} method="post" onsubmit="!confirm('本当に削除しますか？') && e.preventDefault()">
+                  <input type="submit" value="削除" />
+                </form>
               </td>
             </tr>
           ))}

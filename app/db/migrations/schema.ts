@@ -1,5 +1,5 @@
-import { mysqlTable, mysqlSchema, text, int, date } from "drizzle-orm/mysql-core"
-import { sql } from "drizzle-orm"
+import { mysqlTable, text, int, date } from "drizzle-orm/mysql-core"
+import { type InferSelectModel, type InferInsertModel } from 'drizzle-orm';
 
 export const login = mysqlTable("login", {
 	userId: text().notNull(),
@@ -16,3 +16,6 @@ export const techlist = mysqlTable("techlist", {
 	createDate: date("CreateDate", { mode: 'string' }).default("'2019-01-01'").notNull(),
 	repository: text("Repository").default('NULL'),
 });
+
+export type TechListItem = InferSelectModel<typeof techlist>
+export type NewTechListItem = InferInsertModel<typeof techlist>
