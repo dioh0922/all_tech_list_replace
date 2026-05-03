@@ -1,4 +1,5 @@
 import { serve } from '@hono/node-server'
+import { serveStatic } from '@hono/node-server/serve-static'
 import { Hono, } from 'hono'
 import { deleteCookie, setCookie } from 'hono/cookie'
 import { desc, eq } from 'drizzle-orm'
@@ -19,6 +20,8 @@ type Variables = JwtVariables ;
 const app = new Hono<{ Variables: Variables }>()
 
 app.use(renderer)
+app.use('/static/*', serveStatic({ root: './src' }))
+app.use('/static/style.css', serveStatic({ path: './src/style.css' }))
 
 app.get('/', async (c) => {
   const allLists = await db.select()
@@ -32,12 +35,18 @@ app.get('/', async (c) => {
 
 app.get('/login', (c) => {
   return c.render(
-    <div>
-      <h1>Login</h1>
+    <div class="form-card">
+      <h1 class="card-title">Login</h1>
       <form action="/login" method="post">
-        <input type="text" name="userId" placeholder="User ID" required />
-        <input type="password" name="pass" placeholder="Password" required />
-        <button type="submit">Login</button>
+        <div class="form-group">
+          <label>User ID</label>
+          <input type="text" name="userId" placeholder="User ID" required />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" name="pass" placeholder="Password" required />
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%">Login</button>
       </form>
     </div>
   )
