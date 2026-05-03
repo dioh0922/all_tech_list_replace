@@ -7,6 +7,9 @@ type TechListProps = {
 export const List = ({ allLists }: TechListProps) => {
   return (
     <div>
+      <div>
+        <a href="/logout">ログアウト</a>
+      </div>
       <div style={{ marginBottom: '20px' }}>
         <a href="/add">新規プロジェクト追加</a> | 
         <a href="https://github.com" target="_blank" rel="noopener noreferrer"> GitHub</a>

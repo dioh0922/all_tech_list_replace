@@ -1,15 +1,22 @@
 import { serve } from '@hono/node-server'
-import { Hono } from 'hono'
-
+import { Hono, } from 'hono'
+import { deleteCookie, setCookie } from 'hono/cookie'
 import { desc, eq } from 'drizzle-orm'
-import { techlist } from '../db/migrations/schema.js'
+import { techlist, login } from '../db/migrations/schema.js'
 import { db } from './db.js'
 import { renderer } from './layout.js'
+import { authMiddleware } from './auth.js'
+import { sign, type JwtVariables  } from 'hono/jwt'
+import * as bcrypt from 'bcryptjs'
+
 import { List } from './components/list.js'
 import { Add } from './components/add.js'
 import { Edit } from './components/edit.js'
+import { LoginFailure } from './components/login_failure.js'
 
-const app = new Hono()
+type Variables = JwtVariables ;
+
+const app = new Hono<{ Variables: Variables }>()
 
 app.use(renderer)
 
@@ -23,7 +30,53 @@ app.get('/', async (c) => {
   )
 })
 
-app.get('/add', (c) => {
+app.get('/login', (c) => {
+  return c.render(
+    <div>
+      <h1>Login</h1>
+      <form action="/login" method="post">
+        <input type="text" name="userId" placeholder="User ID" required />
+        <input type="password" name="pass" placeholder="Password" required />
+        <button type="submit">Login</button>
+      </form>
+    </div>
+  )
+})
+
+app.post('/login', async (c) => {
+  const { userId, pass } = await c.req.parseBody()
+  const user = await db.select()
+    .from(login)
+    .where(eq(login.userId, userId as string))
+    .limit(1)
+
+  if (user.length === 0) {
+    return c.render(<LoginFailure msg="User not found" />)
+  }
+  if(await bcrypt.compare(pass as string, user[0].pass) === false) {
+    return c.render(<LoginFailure msg="Invalid credentials" />)
+  }
+  const payload = {
+    userId: user[0].userId,
+    exp: Math.floor(Date.now() / 1000) + (60 * 60 * 12) // 12時間有効,
+  }
+  const token = await sign(payload, process.env.JWT_SECRET || 'secret', 'HS256')
+  setCookie(c, 'token', token, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'strict',
+    maxAge: 60 * 60 * 12
+  })
+  return c.redirect('/')
+  
+})
+
+app.get('/logout', (c) => {
+  deleteCookie(c, 'token')
+  return c.redirect('/')
+})
+
+app.get('/add', authMiddleware, (c) => {
   return c.render(<Add/>)
 })
 app.post('/add', async (c) => {
@@ -45,7 +98,7 @@ app.post('/add', async (c) => {
   return c.redirect('/')
 })
 
-app.get('/edit/:id', async (c) => {
+app.get('/edit/:id', authMiddleware, async (c) => {
   const id = c.req.param('id');
   const listItem = await db.select()
     .from(techlist)
@@ -57,7 +110,7 @@ app.get('/edit/:id', async (c) => {
   }
   return c.render(<Edit item={listItem[0]} />)
 })
-app.post('/edit/:id', async (c) => {
+app.post('/edit/:id', authMiddleware, async (c) => {
   const id = c.req.param('id');
   const formData = await c.req.formData()
   const projectName = formData.get('projectName') as string
@@ -79,7 +132,7 @@ app.post('/edit/:id', async (c) => {
   return c.redirect(`/edit/${id}`)
 })
 
-app.post('/delete/:id', async (c) => {
+app.post('/delete/:id', authMiddleware, async (c) => {
   const id = c.req.param('id');
   await db.delete(techlist)
     .where(eq(techlist.projectId, Number(id)))
