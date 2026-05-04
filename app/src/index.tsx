@@ -15,7 +15,7 @@ import { Add } from './components/add.js'
 import { Edit } from './components/edit.js'
 import { LoginFailure } from './components/login_failure.js'
 
-type Variables = JwtVariables ;
+type Variables = JwtVariables
 
 const app = new Hono<{ Variables: Variables }>()
 

@@ -15,46 +15,54 @@ export const List = ({ allLists }: TechListProps) => {
         </div>
       </div>
 
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>プロジェクト名</th>
-              <th>主な技術</th>
-              <th>URL</th>
-              <th>作成時期</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            {allLists.map((list) => (
-              <tr key={list.projectId}>
-                <td style="font-weight: 500;">{list.projectName}</td>
-                <td><span style="background: #e0f2fe; color: #0369a1; padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.75rem;">{list.techName}</span></td>
-                <td>
-                  {list.url && (list.url.includes('/') ? (
-                    <a href={list.url} style="color: var(--primary); text-decoration: none;">{list.url}</a>
+      <div class="project-grid">
+        {allLists.map((list) => (
+          <div class="project-card" key={list.projectId}>
+            <div class="card-header">
+              <h3 class="project-name">{list.projectName}</h3>
+              <span class="project-date">{new Date(list.createDate).toLocaleDateString('ja-JP')}</span>
+            </div>
+            
+            <div class="card-body">
+              <div class="tech-tags">
+                {list.techName?.split(',').map(tech => (
+                  <span class="tech-tag">{tech.trim()}</span>
+                ))}
+              </div>
+            </div>
+
+            <div class="card-footer">
+              <div class="primary-links">
+                {list.url && (
+                  list.url === '廃止' ? (
+                    <span class="icon-link-disabled" title="廃止">
+                      <span class="material-symbols-outlined">block</span>
+                    </span>
                   ) : (
-                    list.url
-                  ))}
-                </td>
-                <td>{new Date(list.createDate).toLocaleDateString('ja-JP')}</td>
-                <td>
-                  <div class="actions">
-                    <a href={`/edit/${list.projectId}`} class="btn btn-outline" style="padding: 0.25rem 0.75rem;">編集</a>
-                    <form action={`/delete/${list.projectId}`} method="post" style="display: inline;" onsubmit="return confirm('本当に削除しますか？')">
-                      <button type="submit" class="btn btn-danger" style="padding: 0.25rem 0.75rem;">削除</button>
-                    </form>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      
-      <div style="text-align: center; margin-top: 2rem;">
-        <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="btn btn-outline" style="font-size: 0.75rem;">GitHub</a>
+                    <a href={list.url} target="_blank" rel="noopener noreferrer" class="icon-link" title="Open URL">
+                      <span class="material-symbols-outlined">open_in_new</span>
+                    </a>
+                  )
+                )}
+                {list.repository && (
+                  <a href={list.repository} target="_blank" rel="noopener noreferrer" class="icon-link" title="Repository">
+                    <span class="material-symbols-outlined">code</span>
+                  </a>
+                )}
+              </div>
+              <div class="management-actions">
+                <a href={`/edit/${list.projectId}`} class="btn-icon" title="編集">
+                  <span class="material-symbols-outlined">edit</span>
+                </a>
+                <form action={`/delete/${list.projectId}`} method="post" onsubmit="return confirm('本当に削除しますか？')">
+                  <button type="submit" class="btn-icon btn-icon-danger" title="削除">
+                    <span class="material-symbols-outlined">delete</span>
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   )
