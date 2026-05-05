@@ -2,16 +2,25 @@
   "name": "app",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx watch --env-file=.env src/index.tsx",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node --env-file=.env dist/index.js",
+    "bundle": "esbuild src/index.tsx --bundle --platform=node --target=node20 --outfile=dist/bundle.js --external:pg-native && cp src/style.css dist/style.css"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.14",
-    "hono": "^4.12.15"
+    "bcryptjs": "^3.0.3",
+    "drizzle-orm": "^0.45.2",
+    "hono": "^4.12.15",
+    "mysql2": "^3.22.3",
+    "pg": "^8.20.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@types/node": "^20.11.17",
+    "@types/pg": "^8.20.0",
+    "drizzle-kit": "^0.31.10",
+    "esbuild": "^0.28.0",
     "tsx": "^4.7.1",
     "typescript": "^5.8.3"
   }
