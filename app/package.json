@@ -4,7 +4,8 @@
   "scripts": {
     "dev": "tsx watch --env-file=.env src/index.tsx",
     "build": "tsc",
-    "start": "node --env-file=.env dist/index.js"
+    "start": "node --env-file=.env dist/index.js",
+    "bundle": "esbuild src/index.tsx --bundle --platform=node --target=node20 --outfile=dist/bundle.js --external:pg-native && cp src/style.css dist/style.css"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.14",
@@ -19,6 +20,7 @@
     "@types/node": "^20.11.17",
     "@types/pg": "^8.20.0",
     "drizzle-kit": "^0.31.10",
+    "esbuild": "^0.28.0",
     "tsx": "^4.7.1",
     "typescript": "^5.8.3"
   }

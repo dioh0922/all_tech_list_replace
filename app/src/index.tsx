@@ -15,13 +15,14 @@ import { Add } from './components/add.js'
 import { Edit } from './components/edit.js'
 import { LoginFailure } from './components/login_failure.js'
 
+
 type Variables = JwtVariables
 
 const app = new Hono<{ Variables: Variables }>()
 
 app.use(renderer)
 app.use('/static/*', serveStatic({ root: './src' }))
-app.use('/static/style.css', serveStatic({ path: './src/style.css' }))
+app.use('/static/style.css', serveStatic({ path: './style.css' }))
 
 app.get('/', async (c) => {
   const allLists = await db.select()
