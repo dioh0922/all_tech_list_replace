@@ -10,6 +10,8 @@ import { authMiddleware } from './auth.js'
 import { sign, type JwtVariables  } from 'hono/jwt'
 import * as bcrypt from 'bcryptjs'
 
+import { styleText } from './style.js'
+
 import { List } from './components/list.js'
 import { Add } from './components/add.js'
 import { Edit } from './components/edit.js'
@@ -21,8 +23,12 @@ type Variables = JwtVariables
 const app = new Hono<{ Variables: Variables }>()
 
 app.use(renderer)
-app.use('/static/*', serveStatic({ root: './src' }))
-app.use('/static/style.css', serveStatic({ path: './style.css' }))
+app.use('/static/*', serveStatic({ root: './' }))
+app.get('/static/style.css', (c) => {
+  return c.text(styleText, 200, {
+    'Content-Type': 'text/css',
+  })
+})
 
 app.get('/', async (c) => {
   const allLists = await db.select()

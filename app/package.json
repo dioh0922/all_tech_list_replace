@@ -5,7 +5,7 @@
     "dev": "tsx watch --env-file=.env src/index.tsx",
     "build": "tsc",
     "start": "node --env-file=.env dist/index.js",
-    "bundle": "esbuild src/index.tsx --bundle --platform=node --target=node20 --outfile=dist/bundle.js --external:pg-native && cp src/style.css dist/style.css"
+    "bundle": "esbuild src/index.tsx --bundle --platform=node --target=node20 --format=esm --outfile=dist/bundle.mjs --external:pg-native --banner:js=\"import { createRequire } from 'module'; const require = createRequire(import.meta.url);\""
   },
   "dependencies": {
     "@hono/node-server": "^1.19.14",

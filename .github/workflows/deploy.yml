@@ -34,7 +34,7 @@ jobs:
           username: ${{ secrets.REMOTE_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           # 成果物を転送 (app/dist/ 配下のファイルを対象にする)
-          source: "app/dist/bundle.js,app/dist/style.css"
+          source: "app/dist/bundle.mjs,app/dist/style.css"
           # サーバー上のパス。プロジェクトの構造に合わせて調整してください。
           target: ${{ secrets.SVR_DIR }}
           strip_components: 2
@@ -49,4 +49,4 @@ jobs:
             # サーバー上のデプロイディレクトリに移動
             cd ${{ secrets.SVR_DIR }}
             # PM2でプロセスを再起動、存在しない場合は新規起動
-            pm2 restart all-tech-list || pm2 start bundle.js --name "all-tech-list" --node-args="--env-file=.env"
+            pm2 restart all-tech-list || pm2 start bundle.mjs --name "all-tech-list" --node-args="--env-file=.env"
