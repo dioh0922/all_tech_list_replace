@@ -16,6 +16,7 @@ import { List } from './components/list.js'
 import { Add } from './components/add.js'
 import { Edit } from './components/edit.js'
 import { LoginFailure } from './components/login_failure.js'
+import { BASE_PATH } from './config.js'
 
 
 type Variables = JwtVariables
@@ -44,7 +45,7 @@ app.get('/login', (c) => {
   return c.render(
     <div class="form-card">
       <h1 class="card-title">Login</h1>
-      <form action="/login" method="post">
+      <form action={`${BASE_PATH}/login`} method="post">
         <div class="form-group">
           <label>User ID</label>
           <input type="text" name="userId" placeholder="User ID" required />
@@ -83,13 +84,13 @@ app.post('/login', async (c) => {
     sameSite: 'strict',
     maxAge: 60 * 60 * 12
   })
-  return c.redirect('/')
+  return c.redirect(`${BASE_PATH}/`)
   
 })
 
 app.get('/logout', (c) => {
   deleteCookie(c, 'token')
-  return c.redirect('/')
+  return c.redirect(`${BASE_PATH}/`)
 })
 
 app.get('/add', authMiddleware, (c) => {
@@ -111,7 +112,7 @@ app.post('/add', async (c) => {
     createDate: new Date(createDate).toISOString().split('T')[0]
   })
 
-  return c.redirect('/')
+  return c.redirect(`${BASE_PATH}/`)
 })
 
 app.get('/edit/:id', authMiddleware, async (c) => {
@@ -122,7 +123,7 @@ app.get('/edit/:id', authMiddleware, async (c) => {
     .limit(1)
 
   if(listItem.length === 0) {
-    return c.redirect('/')
+    return c.redirect(`${BASE_PATH}/`)
   }
   return c.render(<Edit item={listItem[0]} />)
 })
@@ -145,7 +146,7 @@ app.post('/edit/:id', authMiddleware, async (c) => {
     })
     .where(eq(techlist.projectId, Number(id)))
 
-  return c.redirect(`/edit/${id}`)
+  return c.redirect(`${BASE_PATH}/edit/${id}`)
 })
 
 app.post('/delete/:id', authMiddleware, async (c) => {
@@ -153,7 +154,7 @@ app.post('/delete/:id', authMiddleware, async (c) => {
   await db.delete(techlist)
     .where(eq(techlist.projectId, Number(id)))
 
-  return c.redirect('/')
+  return c.redirect(`${BASE_PATH}/`)
 })
 
 serve({

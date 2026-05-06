@@ -1,4 +1,5 @@
 import { techlist } from '../../db/migrations/schema.js'
+import { BASE_PATH } from '../config.js'
 
 type TechListProps = {
   allLists: (typeof techlist.$inferSelect)[]
@@ -10,8 +11,8 @@ export const List = ({ allLists }: TechListProps) => {
       <div class="flex-between mb-4">
         <h2 class="card-title" style="margin-bottom: 0;">プロジェクト一覧</h2>
         <div class="actions">
-          <a href="/add" class="btn btn-primary">新規プロジェクト追加</a>
-          <a href="/logout" class="btn btn-outline">ログアウト</a>
+          <a href={`${BASE_PATH}/add`} class="btn btn-primary">新規プロジェクト追加</a>
+          <a href={`${BASE_PATH}/logout`} class="btn btn-outline">ログアウト</a>
         </div>
       </div>
 
@@ -51,10 +52,10 @@ export const List = ({ allLists }: TechListProps) => {
                 )}
               </div>
               <div class="management-actions">
-                <a href={`/edit/${list.projectId}`} class="btn-icon" title="編集">
+                <a href={`${BASE_PATH}/edit/${list.projectId}`} class="btn-icon" title="編集">
                   <span class="material-symbols-outlined">edit</span>
                 </a>
-                <form action={`/delete/${list.projectId}`} method="post" onsubmit="return confirm('本当に削除しますか？')">
+                <form action={`${BASE_PATH}/delete/${list.projectId}`} method="post" onsubmit="return confirm('本当に削除しますか？')">
                   <button type="submit" class="btn-icon btn-icon-danger" title="削除">
                     <span class="material-symbols-outlined">delete</span>
                   </button>

@@ -1,8 +1,10 @@
+import { BASE_PATH } from "../config.js"
+
 export const Add = () => {
   return (
     <div class="form-card">
       <h1 class="card-title">新規プロジェクト追加</h1>
-      <form method="post" action="/add">
+      <form method="post" action={`${BASE_PATH}/add`}>
         <div class="form-group">
           <label>プロジェクト名:</label>
           <input type="text" name="projectName" required />
@@ -24,7 +26,7 @@ export const Add = () => {
           <input type="date" name="createDate" />
         </div>
         <div class="actions" style="justify-content: flex-end; margin-top: 2rem;">
-          <a href="/" class="btn btn-outline">キャンセル</a>
+          <a href={`${BASE_PATH}/`} class="btn btn-outline">キャンセル</a>
           <button type="submit" class="btn btn-primary">追加する</button>
         </div>
       </form>
