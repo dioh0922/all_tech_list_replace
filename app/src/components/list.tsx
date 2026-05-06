@@ -46,7 +46,7 @@ export const List = ({ allLists }: TechListProps) => {
                   )
                 )}
                 {list.repository && (
-                  <a href={list.repository} target="_blank" rel="noopener noreferrer" class="icon-link" title="Repository">
+                  <a href={`https://github.com/dioh0922/${list.repository}`} target="_blank" rel="noopener noreferrer" class="icon-link" title="Repository">
                     <span class="material-symbols-outlined">code</span>
                   </a>
                 )}
