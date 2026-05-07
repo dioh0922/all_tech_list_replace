@@ -17,6 +17,7 @@ import { Add } from './components/add.js'
 import { Edit } from './components/edit.js'
 import { LoginFailure } from './components/login_failure.js'
 import { BASE_PATH } from './config.js'
+import { saveToVector } from './vector.js'
 
 
 type Variables = JwtVariables
@@ -155,6 +156,47 @@ app.post('/delete/:id', authMiddleware, async (c) => {
     .where(eq(techlist.projectId, Number(id)))
 
   return c.redirect(`${BASE_PATH}/`)
+})
+
+app.get('/api/convert', authMiddleware, async (c) => {
+    const list = await db.select({
+        projectName: techlist.projectName,
+        techName: techlist.techName, 
+        createDate: techlist.createDate
+      })
+      .from(techlist)
+      .orderBy(desc(techlist.createDate))
+    const vectoredList = list.map((item: any) => {
+      const itemData = `(${item.projectName})-(${item.techName})-(${item.createDate})`
+      return {
+        projectName: item.projectName,
+        techName: item.techName,
+        createDate: item.createDate
+      }
+    })
+    
+    saveToVector(vectoredList);
+
+    return c.json({
+      message: 'Vector loading successful',
+      count: vectoredList.length,
+      data: vectoredList
+    })
+})
+
+app.get('/api/dump', authMiddleware, async (c) => {
+  try {
+    const list = await db.select({
+        projectName: techlist.projectName,
+        techName: techlist.techName, 
+        createDate: techlist.createDate
+      })
+      .from(techlist)
+      .orderBy(desc(techlist.createDate))
+    return c.json(list)
+  } catch (error) {
+    return c.json({ error: 'Failed to fetch URL' }, 500)
+  }
 })
 
 serve({

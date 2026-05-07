@@ -1,3 +1,4 @@
 /app/dist
 /app/ai_plan/screenshots
 /app/test-results
+/app/db/sqlite
