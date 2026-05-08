@@ -5,20 +5,27 @@ type TechListProps = {
   allLists: (typeof techlist.$inferSelect)[]
 }
 
-export const List = ({ allLists }: TechListProps) => {
+export const List = ({ allLists, isLogIn }: TechListProps & { isLogIn: boolean }) => {
   return (
     <div>
       <div class="flex-between mb-4">
         <h2 class="card-title" style="margin-bottom: 0;">プロジェクト一覧</h2>
         <div class="actions">
-          <a href={`${BASE_PATH}/add`} class="btn btn-primary">新規プロジェクト追加</a>
-          <a href={`${BASE_PATH}/api/convert`} class="btn btn-outline" download title="ベクトル保存">
-            <span class="material-symbols-outlined">save</span>
-          </a>
-          <a href={`${BASE_PATH}/api/dump`} class="btn btn-outline" download title="JSONダウンロード">
-            <span class="material-symbols-outlined">download</span>
-          </a>
-          <a href={`${BASE_PATH}/logout`} class="btn btn-outline">ログアウト</a>
+          {!isLogIn && (
+            <a href={`${BASE_PATH}/login`} class="btn btn-outline">ログイン</a>
+          )}
+          {isLogIn && (
+            <div>
+              <a href={`${BASE_PATH}/add`} class="btn btn-primary">新規プロジェクト追加</a>
+              <a href={`${BASE_PATH}/api/convert`} class="btn btn-outline" download title="ベクトル保存">
+                <span class="material-symbols-outlined">save</span>
+              </a>
+              <a href={`${BASE_PATH}/api/dump`} class="btn btn-outline" download title="JSONダウンロード">
+                <span class="material-symbols-outlined">download</span>
+              </a>
+              <a href={`${BASE_PATH}/logout`} class="btn btn-outline">ログアウト</a>
+            </div>
+          )}
         </div>
       </div>
 

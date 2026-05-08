@@ -1,28 +1,31 @@
 import { serve } from '@hono/node-server'
 import { serveStatic } from '@hono/node-server/serve-static'
-import { Hono, } from 'hono'
+import { Hono } from 'hono'
 import { deleteCookie, setCookie } from 'hono/cookie'
 import { desc, eq } from 'drizzle-orm'
 import { techlist, login } from '../db/migrations/schema.js'
 import { db } from './db.js'
 import { renderer } from './layout.js'
-import { authMiddleware } from './auth.js'
+import { authMiddleware, isLoggedIn } from './auth.js'
 import { sign, type JwtVariables  } from 'hono/jwt'
 import * as bcrypt from 'bcryptjs'
+import { writeFile, mkdir, readdir, readFile } from 'fs/promises'
 
 import { styleText } from './style.js'
 
 import { List } from './components/list.js'
 import { Add } from './components/add.js'
 import { Edit } from './components/edit.js'
+import { Vector } from './components/vector.js'
 import { LoginFailure } from './components/login_failure.js'
 import { BASE_PATH } from './config.js'
-import { saveToVector } from './vector.js'
+import { saveToVector, getVectors } from './vector.js'
 
 
 type Variables = JwtVariables
 
 const app = new Hono<{ Variables: Variables }>()
+const dataDir = './data/json'
 
 app.use(renderer)
 app.use('/static/*', serveStatic({ root: './' }))
@@ -33,12 +36,13 @@ app.get('/static/style.css', (c) => {
 })
 
 app.get('/', async (c) => {
+  const isLogIn = isLoggedIn(c)
   const allLists = await db.select()
     .from(techlist)
     .orderBy(desc(techlist.createDate))
   
   return c.render(
-    <List allLists={allLists} />
+    <List allLists={allLists} isLogIn={isLogIn} />
   )
 })
 
@@ -158,33 +162,55 @@ app.post('/delete/:id', authMiddleware, async (c) => {
   return c.redirect(`${BASE_PATH}/`)
 })
 
-app.get('/api/convert', authMiddleware, async (c) => {
-    const list = await db.select({
-        projectName: techlist.projectName,
-        techName: techlist.techName, 
-        createDate: techlist.createDate
-      })
-      .from(techlist)
-      .orderBy(desc(techlist.createDate))
-    const vectoredList = list.map((item: any) => {
-      const itemData = `(${item.projectName})-(${item.techName})-(${item.createDate})`
+app.get('/vector', async (c) => {
+  const files = await readdir(dataDir)
+  return c.render(<Vector files={files} />)
+})
+
+app.post('/api/convert', authMiddleware, async (c) => {
+    const formData = await c.req.formData()
+    const file = formData.get('file') as File
+
+    if (!file) {
+      return c.json({ error: 'No file uploaded' }, 400)
+    }
+
+    const text = await file.text()
+    const json = JSON.parse(text)
+    const vectoredList = json.map((item: any) => {
       return {
         projectName: item.projectName,
         techName: item.techName,
-        createDate: item.createDate
+        createDate: item.createDate,
+        description: item.description,
       }
     })
-    
+
     saveToVector(vectoredList);
 
-    return c.json({
-      message: 'Vector loading successful',
-      count: vectoredList.length,
-      data: vectoredList
-    })
+    const { vectors } = await getVectors();
+    const tempData = {
+      vectors,
+      request: json
+    }
+
+    await mkdir(dataDir, { recursive: true })
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const HH = String(now.getHours()).padStart(2, '0');
+    const ii = String(now.getMinutes()).padStart(2, '0');
+    const ss = String(now.getSeconds()).padStart(2, '0');
+    await writeFile(`${dataDir}/request-${yyyy}${mm}${dd}${HH}${ii}${ss}.json`, JSON.stringify(tempData), 'utf-8')
+
+    return c.redirect(`${BASE_PATH}/vector`)
 })
 
-app.get('/api/dump', authMiddleware, async (c) => {
+app.get('/api/dump', async (c) => {
+  if(!isLoggedIn(c)) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
   try {
     const list = await db.select({
         projectName: techlist.projectName,
@@ -196,6 +222,21 @@ app.get('/api/dump', authMiddleware, async (c) => {
     return c.json(list)
   } catch (error) {
     return c.json({ error: 'Failed to fetch URL' }, 500)
+  }
+})
+
+app.get('/data/json/:filename', async (c) => {
+  if(!isLoggedIn(c)) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+  const filename = c.req.param('filename')
+  try {
+    const fileContent = await readFile(`${dataDir}/${filename}`, 'utf-8')
+    return c.text(fileContent, 200, {
+      'Content-Type': 'application/json',
+    })
+  } catch (error) {
+    return c.json({ error: 'Failed to read file' }, 500)
   }
 })
 

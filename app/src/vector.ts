@@ -12,7 +12,8 @@ vectorDb.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     projectName TEXT,
     techName TEXT,
-    createDate TEXT
+    createDate TEXT,
+    description TEXT
   );
   CREATE VIRTUAL TABLE IF NOT EXISTS tech_vectors USING vss0(
     embedding(3)
@@ -21,7 +22,7 @@ vectorDb.exec(`
 
 export const saveToVector = (items: any[]) => {
   const insertMetadata = vectorDb.prepare(
-    'INSERT INTO tech_metadata (projectName, techName, createDate) VALUES (?, ?, ?)'
+    'INSERT INTO tech_metadata (projectName, techName, createDate, description) VALUES (?, ?, ?, ?)'
   );
   const insertVector = vectorDb.prepare(
     'INSERT INTO tech_vectors (rowid, embedding) VALUES (?, ?)'
@@ -33,7 +34,7 @@ export const saveToVector = (items: any[]) => {
     vectorDb.prepare('DELETE FROM tech_vectors').run();
 
     for (const item of data) {
-      const result = insertMetadata.run(item.projectName, item.techName, item.createDate);
+      const result = insertMetadata.run(item.projectName, item.techName, item.createDate, item.description);
       const rowid = result.lastInsertRowid;
       insertVector.run(rowid, JSON.stringify(item.vector));
     }
@@ -44,4 +45,10 @@ export const saveToVector = (items: any[]) => {
 
 export const getVectorCount = () => {
   return vectorDb.prepare('SELECT count(*) as count FROM tech_metadata').get() as { count: number };
+};
+
+export const getVectors = async () => {
+  //const metadata = await vectorDb.prepare('SELECT * FROM tech_metadata').all();
+  const vectors = await vectorDb.prepare('SELECT rowid, embedding FROM tech_vectors').all();
+  return { vectors };
 };

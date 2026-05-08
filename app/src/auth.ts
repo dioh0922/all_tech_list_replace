@@ -18,3 +18,11 @@ export const authMiddleware = async(c: Context, next: Next) => {
     return c.redirect(`${BASE_PATH}/login`)
   }
 }
+
+export const isLoggedIn = (c: Context) => {
+  const token = getCookie(c, 'token')
+  if (!token) {
+    return false
+  }
+  return true
+}
