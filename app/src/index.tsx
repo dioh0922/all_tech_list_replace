@@ -186,7 +186,7 @@ app.post('/api/convert', authMiddleware, async (c) => {
       }
     })
 
-    saveToVector(vectoredList);
+    await saveToVector(vectoredList);
 
     const { vectors } = await getVectors();
     const tempData = {
