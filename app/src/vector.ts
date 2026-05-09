@@ -1,27 +1,22 @@
 import Database from 'better-sqlite3';
 import * as sqlite_vss from 'sqlite-vss';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { generateEmbedding } from './genai.js';
 
 const vectorDb = new Database('./db/sqlite/tech_assets.db');
 
 // sqlite-vss エクステンションのロード
 sqlite_vss.load(vectorDb);
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENAI_API_KEY || '');
-const model = genAI.getGenerativeModel({ model: "gemini-embedding-2"});
-
 // テーブルの初期化
 vectorDb.exec(`
-  DROP TABLE IF EXISTS tech_vectors;
-  DROP TABLE IF EXISTS tech_metadata;
-  CREATE TABLE tech_metadata (
+  CREATE TABLE IF NOT EXISTS tech_metadata (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     projectName TEXT,
     techName TEXT,
     createDate TEXT,
     description TEXT
   );
-  CREATE VIRTUAL TABLE tech_vectors USING vss0(
+  CREATE VIRTUAL TABLE IF NOT EXISTS tech_vectors USING vss0(
     embedding(768)
   );
 `);
@@ -41,8 +36,7 @@ export const saveToVector = async (items: any[]) => {
   // APIコールを並列実行
   const promises = items.map(async (item) => {
     const inputText = `Project: ${item.projectName}\nTech: ${item.techName}\nDescription: ${item.description}`;
-    const resultEmbed = await model.embedContent(inputText);
-    const embedding = resultEmbed.embedding.values;
+    const embedding = await generateEmbedding(inputText);
     return { item, embedding };
   });
 
@@ -61,7 +55,27 @@ export const getVectorCount = () => {
 };
 
 export const getVectors = async () => {
-  //const metadata = await vectorDb.prepare('SELECT * FROM tech_metadata').all();
   const vectors = await vectorDb.prepare('SELECT rowid, embedding FROM tech_vectors').all();
   return { vectors };
 };
+
+export const searchNearVector = async (text: string) => {
+  const inputEmbedding = await generateEmbedding(text)
+  const results = vectorDb.prepare(`
+    SELECT tm.projectName, tm.techName, tm.createDate, tm.description 
+    FROM tech_vectors v
+    JOIN tech_metadata tm ON v.rowid = tm.id
+    WHERE vss_search(v.embedding, vss_search_params(?, 5))
+    ORDER BY v.distance ASC
+    LIMIT 5;
+  `).all(JSON.stringify(inputEmbedding))
+  return results;
+}
+
+export const isEmpty = () => {
+  const countResult = vectorDb.prepare('SELECT COUNT(*) as count FROM tech_metadata').get() as { count: number };
+  if (countResult.count > 0) {
+    return false
+  }
+  return true
+}

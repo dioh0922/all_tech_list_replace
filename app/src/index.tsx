@@ -17,9 +17,12 @@ import { List } from './components/list.js'
 import { Add } from './components/add.js'
 import { Edit } from './components/edit.js'
 import { Vector } from './components/vector.js'
+import { Ask } from './components/ask.js'
+import { VectorResult } from './components/vector_result.js'
 import { LoginFailure } from './components/login_failure.js'
 import { BASE_PATH } from './config.js'
-import { saveToVector, getVectors } from './vector.js'
+import { saveToVector, getVectors, searchNearVector, isEmpty } from './vector.js'
+import { generateIdea } from './genai.js'
 
 
 type Variables = JwtVariables
@@ -238,6 +241,29 @@ app.get('/data/json/:filename', async (c) => {
   } catch (error) {
     return c.json({ error: 'Failed to read file' }, 500)
   }
+})
+
+app.get('/ask', (c) => {
+  return c.render(<Ask />)
+})
+app.post('/ask', async (c) => {
+  const formData = await c.req.formData()
+  const question = formData.get('question') as string
+
+  if(await isEmpty()){
+    return c.render(<VectorResult question={question} result={"No data available. Please upload data first."} />)
+  }
+
+  // 入力をベクトル化
+  // sqlite-vssでベクトル検索
+  const searchResults = await searchNearVector(question);
+
+  // 近いベクトルのメタデータをもとに回答生成
+  const answer = await generateIdea(question, searchResults);
+
+  return c.render(
+    <VectorResult question={question} result={answer} />
+  )
 })
 
 serve({

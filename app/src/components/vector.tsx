@@ -1,4 +1,3 @@
-import { jsxRenderer } from "hono/jsx-renderer"
 import { BASE_PATH } from "../config.js"
 
 export const Vector = ({ files }: { files: string[] }) => {
