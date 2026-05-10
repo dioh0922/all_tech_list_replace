@@ -13,6 +13,10 @@ export const renderer = jsxRenderer(({children}) => {
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
       </head>
       <body>
+        <div id="loading-overlay" class="loading-overlay">
+          <div class="spinner"></div>
+          <div class="loading-text">Processing...</div>
+        </div>
         <header>
           <div class="container">
             <nav>
@@ -26,6 +30,14 @@ export const renderer = jsxRenderer(({children}) => {
         <main class="container">
           {children}
         </main>
+        <script dangerouslySetInnerHTML={{ __html: `
+          document.addEventListener('submit', function(e) {
+            const overlay = document.getElementById('loading-overlay');
+            if (overlay) {
+              overlay.style.display = 'flex';
+            }
+          });
+        `}} />
       </body>
     </html>
   )}
