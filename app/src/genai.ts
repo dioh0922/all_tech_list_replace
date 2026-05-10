@@ -1,5 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { readFile } from "fs/promises";
+const isMock = process.env.DEBUG_ON === 'true' || false
+
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY || '',
 })
@@ -17,6 +19,10 @@ export const generateEmbedding = async (text: string) => {
 }
 
 export const generateIdea = async (question: string, existItems: any[]) => {
+  if(isMock){
+    const mockResult = await readFile('./resource/mock/mock_ask_result.txt', 'utf-8')
+    return mockResult
+  }
   const prompt = await readFile('./resource/prompt/ask_base_prompt.txt', 'utf-8')
   const injectStr = existItems.map((item: any, index: number) => `${index + 1}: ${item.projectName}: ${item.techName}: ${item.description}`).join('\n\n')
   const finalPrompt = prompt

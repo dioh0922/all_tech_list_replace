@@ -17,9 +17,8 @@ export const List = ({ allLists, isLogIn }: TechListProps & { isLogIn: boolean }
           {isLogIn && (
             <div>
               <a href={`${BASE_PATH}/add`} class="btn btn-primary">新規プロジェクト追加</a>
-              <a href={`${BASE_PATH}/api/convert`} class="btn btn-outline" download title="ベクトル保存">
-                <span class="material-symbols-outlined">save</span>
-              </a>
+              <a href={`${BASE_PATH}/vector`} class="btn btn-outline" title="ベクトル変換">変換</a>
+              <a href={`${BASE_PATH}/ask`} class="btn btn-outline" title="分析">分析</a>
               <a href={`${BASE_PATH}/api/dump`} class="btn btn-outline" download title="JSONダウンロード">
                 <span class="material-symbols-outlined">download</span>
               </a>

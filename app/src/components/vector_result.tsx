@@ -1,5 +1,8 @@
 import { BASE_PATH } from "../config.js"
-export const VectorResult = ({result, question}: {result: string, question: string}) => {
+import { html } from "hono/html"
+import { marked } from "marked"
+export const VectorResult = async ({result, question}: {result: string, question: string}) => {
+  const parsedResult = await marked.parse(result)
   return (
     <div class="form-card">
       <h1 class="card-title">Vector Result</h1>
@@ -7,9 +10,11 @@ export const VectorResult = ({result, question}: {result: string, question: stri
         <h3>Question</h3>
         <pre>{question}</pre>
         <h3>Answer</h3>
-        <pre>{result}</pre>
+        <div class="markdown-content">
+          {html(parsedResult)}
+        </div>
       </div>
-      <a href={`${BASE_PATH}/ask`} class="btn btn-secondary" style="width: 100%; margin-top: 10px;">Back to Vector Convert</a>
+      <a href={`${BASE_PATH}/ask`} class="btn btn-outline" style="width: 100%; margin-top: 10px;">Back to Vector Convert</a>
     </div>
   )
 }
