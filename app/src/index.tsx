@@ -11,8 +11,6 @@ import { sign, type JwtVariables  } from 'hono/jwt'
 import * as bcrypt from 'bcryptjs'
 import { writeFile, mkdir, readdir, readFile } from 'fs/promises'
 
-import { styleText } from './style.js'
-
 import { List } from './components/list.js'
 import { Add } from './components/add.js'
 import { Edit } from './components/edit.js'
@@ -32,8 +30,9 @@ const dataDir = './data/json'
 
 app.use(renderer)
 app.use('/static/*', serveStatic({ root: './' }))
-app.get('/static/style.css', (c) => {
-  return c.text(styleText, 200, {
+app.get('/static/style.css', async (c) => {
+  const css = await readFile('./src/style.css', 'utf-8')
+  return c.text(css, 200, {
     'Content-Type': 'text/css',
   })
 })
