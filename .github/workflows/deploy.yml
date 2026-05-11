@@ -27,7 +27,7 @@ jobs:
         run: |
           npm run bundle
           # デプロイに必要なファイルを dist に集約
-          cp -r resource db dist/
+          cp -r resource db package.json package-lock.json dist/
           mkdir -p dist/src
           cp src/style.css dist/src/
         working-directory: app
@@ -43,7 +43,7 @@ jobs:
           target: ${{ secrets.SVR_DIR }}
           strip_components: 2
 
-      - name: Restart App with PM2
+      - name: Install dependencies and Restart App with PM2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.REMOTE_HOST }}
@@ -52,5 +52,9 @@ jobs:
           script: |
             # サーバー上のデプロイディレクトリに移動
             cd ${{ secrets.SVR_DIR }}
+            # 依存関係をインストール (ネイティブモジュールのビルドを含む)
+            npm install --production
+            # 必要ライブラリのインストール (Ubuntu環境を想定)
+            sudo apt-get update && sudo apt-get install -y libgomp1 libblas3 liblapack3 || true
             # PM2でプロセスを再起動、存在しない場合は新規起動
             pm2 restart all-tech-list || pm2 start bundle.mjs --name "all-tech-list" --node-args="--env-file=.env"
