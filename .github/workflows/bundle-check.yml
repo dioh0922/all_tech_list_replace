@@ -35,7 +35,7 @@ jobs:
       - name: Install OS dependencies for sqlite-vss
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgomp1
+          sudo apt-get install -y libgomp1 libblas3 liblapack3
 
       - name: Run bundle
         run: npm run bundle
@@ -50,6 +50,9 @@ jobs:
         run: mkdir -p db/sqlite
 
       - name: Verify bundle starts without SyntaxError
+        env:
+          GOOGLE_GENERATIVE_AI_API_KEY: "dummy_key"
+          JWT_SECRET: "dummy_secret"
         run: |
           # 起動して10秒間エラーで終了しないか確認します。
           # timeoutコマンドの終了コード124はタイムアウト（正常に起動し続けている）を意味します。
