@@ -24,7 +24,12 @@ jobs:
         working-directory: app
 
       - name: Build and Bundle
-        run: npm run bundle
+        run: |
+          npm run bundle
+          # デプロイに必要なファイルを dist に集約
+          cp -r resource db dist/
+          mkdir -p dist/src
+          cp src/style.css dist/src/
         working-directory: app
 
       - name: Deploy to Server
@@ -33,9 +38,8 @@ jobs:
           host: ${{ secrets.REMOTE_HOST }}
           username: ${{ secrets.REMOTE_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          # 成果物を転送 (app/dist/ 配下のファイルを対象にする)
-          source: "app/dist/bundle.mjs,app/dist/style.css"
-          # サーバー上のパス。プロジェクトの構造に合わせて調整してください。
+          # dist ディレクトリ配下をすべて転送
+          source: "app/dist/**"
           target: ${{ secrets.SVR_DIR }}
           strip_components: 2
 

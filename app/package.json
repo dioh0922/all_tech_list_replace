@@ -5,7 +5,7 @@
     "dev": "tsx watch --env-file=.env src/index.tsx",
     "build": "tsc",
     "start": "node --env-file=.env dist/index.js",
-    "bundle": "esbuild src/index.tsx --bundle --platform=node --target=node20 --format=esm --outfile=dist/bundle.mjs --external:pg-native --banner:js=\"import { createRequire } from 'module'; const require = createRequire(import.meta.url);\""
+    "bundle": "esbuild src/index.tsx --bundle --platform=node --target=node20 --format=esm --outfile=dist/bundle.mjs --external:pg-native --banner:js=\"import { createRequire } from 'module'; import { fileURLToPath } from 'url'; import { dirname } from 'path'; const require = createRequire(import.meta.url); const __filename = fileURLToPath(import.meta.url); const __dirname = dirname(__filename);\""
   },
   "dependencies": {
     "@google/genai": "^2.0.0",
