@@ -7,7 +7,22 @@ await mkdir('./db/sqlite', { recursive: true });
 const vectorDb = new Database('./db/sqlite/tech_assets.db');
 
 // sqlite-vss エクステンションのロード
-sqlite_vss.load(vectorDb);
+const loadExtension = (db: any, getPathFn: () => string) => {
+  const path = getPathFn();
+  // .so, .dylib, .dll などの拡張子が含まれている場合、
+  // better-sqlite3 (SQLite) が二重に付与してしまうことがあるため除去して試行する
+  const pathWithoutExt = path.replace(/\.(so|dylib|dll)$/, "");
+  try {
+    db.loadExtension(pathWithoutExt);
+  } catch (e) {
+    // 拡張子なしで失敗した場合は元のパスで再試行
+    db.loadExtension(path);
+  }
+};
+
+const vss = sqlite_vss as any;
+loadExtension(vectorDb, vss.getVectorLoadablePath);
+loadExtension(vectorDb, vss.getVssLoadablePath);
 
 // テーブルの初期化
 vectorDb.exec(`
