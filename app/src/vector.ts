@@ -1,7 +1,9 @@
 import Database from 'better-sqlite3';
 import * as sqlite_vss from 'sqlite-vss';
 import { generateEmbedding } from './genai.js';
+import { mkdir } from 'fs/promises';
 
+await mkdir('./db/sqlite', { recursive: true });
 const vectorDb = new Database('./db/sqlite/tech_assets.db');
 
 // sqlite-vss エクステンションのロード

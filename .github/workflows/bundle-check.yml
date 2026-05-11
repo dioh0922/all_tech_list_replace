@@ -35,6 +35,9 @@ jobs:
       - name: Run bundle
         run: npm run bundle
 
+      - name: Create database directory
+        run: mkdir -p db/sqlite
+
       - name: Verify bundle starts without SyntaxError
         run: |
           # 起動して10秒間エラーで終了しないか確認します。
