@@ -11,7 +11,7 @@ export const VectorResult = async ({result, question}: {result: string, question
         <pre>{question}</pre>
         <h3>Answer</h3>
         <div class="markdown-content">
-          {html(parsedResult)}
+          {html([parsedResult] as any)}
         </div>
       </div>
       <a href={`${BASE_PATH}/ask`} class="btn btn-outline" style="width: 100%; margin-top: 10px;">Back to Vector Convert</a>

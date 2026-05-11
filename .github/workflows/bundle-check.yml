@@ -1,0 +1,60 @@
+name: Bundle Check
+
+on:
+  pull_request:
+    paths:
+      - 'app/**'
+      - '.github/workflows/bundle-check.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'app/**'
+      - '.github/workflows/bundle-check.yml'
+
+jobs:
+  check-bundle:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install OS dependencies for sqlite-vss
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgomp1 libblas3 liblapack3
+
+      - name: Run bundle
+        run: npm run bundle
+
+      - name: Debug node_modules and check dependencies
+        run: |
+          ls -R node_modules/sqlite-vss-linux-x64/lib/ || true
+          ldd node_modules/sqlite-vss-linux-x64/lib/vss0.so || true
+          ldd node_modules/sqlite-vss-linux-x64/lib/vector0.so || true
+
+      - name: Create database directory
+        run: mkdir -p db/sqlite
+
+      - name: Verify bundle starts without SyntaxError
+        env:
+          GOOGLE_GENERATIVE_AI_API_KEY: "dummy_key"
+          JWT_SECRET: "dummy_secret"
+        run: |
+          # 起動して10秒間エラーで終了しないか確認します。
+          # timeoutコマンドの終了コード124はタイムアウト（正常に起動し続けている）を意味します。
+          # それ以外の非ゼロの終了コードは、SyntaxErrorや起動時の例外で落ちたことを示します。
+          timeout 10s node dist/bundle.mjs || [ $? -eq 124 ]

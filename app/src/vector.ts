@@ -1,11 +1,37 @@
 import Database from 'better-sqlite3';
 import * as sqlite_vss from 'sqlite-vss';
 import { generateEmbedding } from './genai.js';
+import { mkdir } from 'fs/promises';
 
+await mkdir('./db/sqlite', { recursive: true });
 const vectorDb = new Database('./db/sqlite/tech_assets.db');
 
 // sqlite-vss エクステンションのロード
-sqlite_vss.load(vectorDb);
+const loadExtension = (db: any, getPathFn: () => string) => {
+  const path = getPathFn();
+  // better-sqlite3 (SQLite) は Linux で .so を自動補完するため、拡張子を除去して渡す
+  const pathWithoutExt = path.replace(/\.(so|dylib|dll)$/, "");
+
+  try {
+    db.loadExtension(pathWithoutExt);
+    console.log(`Successfully loaded extension: ${pathWithoutExt}`);
+  } catch (e: any) {
+    console.error(`Failed to load extension from ${pathWithoutExt}. Error: ${e.message}`);
+    // フォールバックとして元のパスでも試すが、エラーは再スローする
+    try {
+      db.loadExtension(path);
+      console.log(`Successfully loaded extension (fallback): ${path}`);
+    } catch (fallbackError: any) {
+      console.error(`Fallback failed for ${path}. Error: ${fallbackError.message}`);
+      throw e; // 最初のエラーをスローする
+    }
+  }
+};
+
+
+const vss = sqlite_vss as any;
+loadExtension(vectorDb, vss.getVectorLoadablePath);
+loadExtension(vectorDb, vss.getVssLoadablePath);
 
 // テーブルの初期化
 vectorDb.exec(`
