@@ -40,9 +40,11 @@ jobs:
       - name: Run bundle
         run: npm run bundle
 
-      - name: Debug node_modules
+      - name: Debug node_modules and check dependencies
         run: |
           ls -R node_modules/sqlite-vss-linux-x64/lib/ || true
+          ldd node_modules/sqlite-vss-linux-x64/lib/vss0.so || true
+          ldd node_modules/sqlite-vss-linux-x64/lib/vector0.so || true
 
       - name: Create database directory
         run: mkdir -p db/sqlite

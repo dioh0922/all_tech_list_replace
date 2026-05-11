@@ -9,16 +9,25 @@ const vectorDb = new Database('./db/sqlite/tech_assets.db');
 // sqlite-vss エクステンションのロード
 const loadExtension = (db: any, getPathFn: () => string) => {
   const path = getPathFn();
-  // .so, .dylib, .dll などの拡張子が含まれている場合、
-  // better-sqlite3 (SQLite) が二重に付与してしまうことがあるため除去して試行する
+  // better-sqlite3 (SQLite) は Linux で .so を自動補完するため、拡張子を除去して渡す
   const pathWithoutExt = path.replace(/\.(so|dylib|dll)$/, "");
+
   try {
     db.loadExtension(pathWithoutExt);
-  } catch (e) {
-    // 拡張子なしで失敗した場合は元のパスで再試行
-    db.loadExtension(path);
+    console.log(`Successfully loaded extension: ${pathWithoutExt}`);
+  } catch (e: any) {
+    console.error(`Failed to load extension from ${pathWithoutExt}. Error: ${e.message}`);
+    // フォールバックとして元のパスでも試すが、エラーは再スローする
+    try {
+      db.loadExtension(path);
+      console.log(`Successfully loaded extension (fallback): ${path}`);
+    } catch (fallbackError: any) {
+      console.error(`Fallback failed for ${path}. Error: ${fallbackError.message}`);
+      throw e; // 最初のエラーをスローする
+    }
   }
 };
+
 
 const vss = sqlite_vss as any;
 loadExtension(vectorDb, vss.getVectorLoadablePath);
