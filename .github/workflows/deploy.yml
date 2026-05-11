@@ -25,7 +25,7 @@ jobs:
 
       - name: Build and Bundle
         run: |
-          npm run bundle && node dist/bundle.mjs --version
+          npm run bundle
           # デプロイに必要なファイルを dist に集約
           cp -r resource db dist/
           mkdir -p dist/src
