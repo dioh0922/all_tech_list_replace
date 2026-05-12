@@ -98,6 +98,31 @@ export const searchNearVector = async (text: string) => {
   return results;
 }
 
+export const addVector = async (item: any) => {
+  const inputText = `Project: ${item.projectName}\nTech: ${item.techName}\nDescription: ${item.description}`
+  const embedding = await generateEmbedding(inputText)
+  const insertMetadata = vectorDb.prepare(
+    'INSERT INTO tech_metadata (projectName, techName, createDate, description) VALUES (?, ?, ?, ?)'
+  )
+  const insertVector = vectorDb.prepare(
+    'INSERT INTO tech_vectors (rowid, embedding) VALUES (?, ?)'
+  )
+  const result = insertMetadata.run(item.projectName, item.techName, item.createDate, item.description);
+  const rowid = result.lastInsertRowid;
+  insertVector.run(rowid, JSON.stringify(embedding));
+}
+
+export const selectVectorByItem = async (item: any) => {
+  const selectVector = vectorDb.prepare('SELECT * FROM tech_metadata WHERE projectName = ? AND techName = ?')
+  .get(item.projectName, item.techName) as any
+  return selectVector.id
+}
+
+export const deleteVectorById = async (id: number) => {
+  vectorDb.prepare('DELETE FROM tech_metadata WHERE id = ?').run(id);
+  vectorDb.prepare('DELETE FROM tech_vectors WHERE rowid = ?').run(id);
+}
+
 export const isEmpty = () => {
   const countResult = vectorDb.prepare('SELECT COUNT(*) as count FROM tech_metadata').get() as { count: number };
   if (countResult.count > 0) {
