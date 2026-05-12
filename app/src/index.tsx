@@ -230,6 +230,18 @@ app.get('/api/dump', async (c) => {
   }
 })
 
+app.get('/api/dump/vector', async (c) => {
+  if(!isLoggedIn(c)) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+  try {
+    const { vectors } = await getVectors();
+    return c.json(vectors)
+  } catch (error) {
+    return c.json({ error: 'Failed to fetch URL' }, 500)
+  }
+})
+
 app.get('/data/json/:filename', async (c) => {
   if(!isLoggedIn(c)) {
     return c.json({ error: 'Unauthorized' }, 401)
