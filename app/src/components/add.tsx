@@ -25,6 +25,10 @@ export const Add = () => {
           <label>開始日:</label>
           <input type="date" name="createDate" />
         </div>
+        <div class="form-group">
+          <label>説明文:</label>
+          <textarea name="description"></textarea>
+        </div>
         <div class="actions" style="justify-content: flex-end; margin-top: 2rem;">
           <a href={`${BASE_PATH}/`} class="btn btn-outline">キャンセル</a>
           <button type="submit" class="btn btn-primary">追加する</button>

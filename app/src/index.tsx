@@ -122,13 +122,14 @@ app.post('/add', async (c) => {
   const url = formData.get('url') as string
   const repository = formData.get('repository') as string
   const requestCreateDate = formData.get('createDate') as string
+  const description = formData.get('description') as string || `projectName: ${projectName}\ntechName: ${techName}`
   let createDate = requestCreateDate
   if(requestCreateDate.length === 0) {
     createDate = new Date().toISOString().split('T')[0]
   }
 
   await insertTech(projectName, techName, url, repository, createDate)
-  await addVector({projectName, techName, createDate, description: `projectName: ${projectName}\ntechName: ${techName}`})
+  await addVector({projectName, techName, createDate, description})
 
   return c.redirect(`${BASE_PATH}/`)
 })
