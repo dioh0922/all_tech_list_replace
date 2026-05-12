@@ -4,7 +4,15 @@ import { Hono } from 'hono'
 import { deleteCookie, setCookie } from 'hono/cookie'
 import { desc, eq } from 'drizzle-orm'
 import { techlist, login } from '../db/migrations/schema.js'
-import { db } from './db.js'
+import { 
+  db,
+  selectTechById, 
+  selectUserById, 
+  selectAllTech,
+  insertTech,
+  updateTechById,
+  deleteTechById
+} from './db.js'
 import { renderer } from './layout.js'
 import { authMiddleware, isLoggedIn } from './auth.js'
 import { sign, type JwtVariables  } from 'hono/jwt'
@@ -19,8 +27,17 @@ import { Ask } from './components/ask.js'
 import { VectorResult } from './components/vector_result.js'
 import { LoginFailure } from './components/login_failure.js'
 import { BASE_PATH } from './config.js'
-import { saveToVector, getVectors, searchNearVector, isEmpty } from './vector.js'
+import { 
+  saveToVector, 
+  getVectors, 
+  searchNearVector, 
+  isEmpty, 
+  addVector, 
+  deleteVectorById, 
+  selectVectorByItem 
+} from './vector.js'
 import { generateIdea } from './genai.js'
+import { create } from 'domain'
 
 
 type Variables = JwtVariables
@@ -39,9 +56,7 @@ app.get('/static/style.css', async (c) => {
 
 app.get('/', async (c) => {
   const isLogIn = isLoggedIn(c)
-  const allLists = await db.select()
-    .from(techlist)
-    .orderBy(desc(techlist.createDate))
+  const allLists = await selectAllTech()
   
   return c.render(
     <List allLists={allLists} isLogIn={isLogIn} />
@@ -69,10 +84,7 @@ app.get('/login', (c) => {
 
 app.post('/login', async (c) => {
   const { userId, pass } = await c.req.parseBody()
-  const user = await db.select()
-    .from(login)
-    .where(eq(login.userId, userId as string))
-    .limit(1)
+  const user = await selectUserById(userId as string)
 
   if (user.length === 0) {
     return c.render(<LoginFailure msg="User not found" />)
@@ -109,25 +121,21 @@ app.post('/add', async (c) => {
   const techName = formData.get('techName') as string
   const url = formData.get('url') as string
   const repository = formData.get('repository') as string
-  const createDate = formData.get('createDate') as string
+  const requestCreateDate = formData.get('createDate') as string
+  let createDate = requestCreateDate
+  if(requestCreateDate.length === 0) {
+    createDate = new Date().toISOString().split('T')[0]
+  }
 
-  await db.insert(techlist).values({
-    projectName,
-    techName,
-    url,
-    repository,
-    createDate: new Date(createDate).toISOString().split('T')[0]
-  })
+  await insertTech(projectName, techName, url, repository, createDate)
+  await addVector({projectName, techName, createDate, description: `projectName: ${projectName}\ntechName: ${techName}`})
 
   return c.redirect(`${BASE_PATH}/`)
 })
 
 app.get('/edit/:id', authMiddleware, async (c) => {
   const id = c.req.param('id');
-  const listItem = await db.select()
-    .from(techlist)
-    .where(eq(techlist.projectId, Number(id)))
-    .limit(1)
+  const listItem = await selectTechById(Number(id))
 
   if(listItem.length === 0) {
     return c.redirect(`${BASE_PATH}/`)
@@ -143,23 +151,17 @@ app.post('/edit/:id', authMiddleware, async (c) => {
   const repository = formData.get('repository') as string
   const createDate = formData.get('createDate') as string
 
-  await db.update(techlist)
-    .set({
-      projectName,
-      techName,
-      url,
-      repository,
-      createDate: new Date(createDate).toISOString().split('T')[0]
-    })
-    .where(eq(techlist.projectId, Number(id)))
-
+  await updateTechById(Number(id), projectName, techName, url, repository, createDate)
   return c.redirect(`${BASE_PATH}/edit/${id}`)
 })
 
 app.post('/delete/:id', authMiddleware, async (c) => {
   const id = c.req.param('id');
-  await db.delete(techlist)
-    .where(eq(techlist.projectId, Number(id)))
+  const targetItem = await selectTechById(Number(id))
+
+  const vectorId = await selectVectorByItem(targetItem[0])
+  await deleteVectorById(vectorId)
+  await deleteTechById(Number(id))
 
   return c.redirect(`${BASE_PATH}/`)
 })
@@ -214,13 +216,13 @@ app.get('/api/dump', async (c) => {
     return c.json({ error: 'Unauthorized' }, 401)
   }
   try {
-    const list = await db.select({
-        projectName: techlist.projectName,
-        techName: techlist.techName, 
-        createDate: techlist.createDate
-      })
-      .from(techlist)
-      .orderBy(desc(techlist.createDate))
+    const list = (await selectAllTech()).map(item => {
+      return {
+        projectName: item.projectName,
+        techName: item.techName,
+        createDate: item.createDate,
+      }
+    })
     return c.json(list)
   } catch (error) {
     return c.json({ error: 'Failed to fetch URL' }, 500)
