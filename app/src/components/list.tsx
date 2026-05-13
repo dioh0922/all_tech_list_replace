@@ -19,9 +19,23 @@ export const List = ({ allLists, isLogIn }: TechListProps & { isLogIn: boolean }
               <a href={`${BASE_PATH}/add`} class="btn btn-primary">新規プロジェクト追加</a>
               <a href={`${BASE_PATH}/vector`} class="btn btn-outline" title="ベクトル変換">変換</a>
               <a href={`${BASE_PATH}/ask`} class="btn btn-outline" title="分析">分析</a>
-              <a href={`${BASE_PATH}/api/dump`} class="btn btn-outline" download title="JSONダウンロード">
-                <span class="material-symbols-outlined">download</span>
-              </a>
+              <div class="dropdown">
+                <button class="btn btn-outline">
+                  <span class="material-symbols-outlined">download</span>
+                  <span>ダウンロード</span>
+                  <span class="material-symbols-outlined" style="font-size: 1rem; margin-left: -0.25rem;">expand_more</span>
+                </button>
+                <div class="dropdown-content">
+                  <a href={`${BASE_PATH}/api/dump`} class="dropdown-item" download>
+                    <span class="material-symbols-outlined">file_download</span>
+                    JSONデータ
+                  </a>
+                  <a href={`${BASE_PATH}/api/dump/vector`} class="dropdown-item" download>
+                    <span class="material-symbols-outlined">account_tree</span>
+                    ベクトルデータ
+                  </a>
+                </div>
+              </div>
               <a href={`${BASE_PATH}/logout`} class="btn btn-outline">ログアウト</a>
             </div>
           )}

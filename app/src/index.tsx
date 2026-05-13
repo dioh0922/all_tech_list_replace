@@ -30,6 +30,7 @@ import { BASE_PATH } from './config.js'
 import { 
   saveToVector, 
   getVectors, 
+  getMeta,
   searchNearVector, 
   isEmpty, 
   addVector, 
@@ -229,6 +230,20 @@ app.get('/api/dump', async (c) => {
     return c.json({ error: 'Failed to fetch URL' }, 500)
   }
 })
+
+app.get('/api/dump/vector', async (c) => {
+  try {
+    const { vectors } = await getVectors();
+    return c.json(vectors)
+  } catch (error) {
+    return c.json({ error: 'Failed to fetch URL' }, 500)
+  }
+})
+
+app.get('/api/dump/meta', async (c) => {
+  const { meta } = await getMeta();
+  return c.json(meta);
+});
 
 app.get('/data/json/:filename', async (c) => {
   if(!isLoggedIn(c)) {

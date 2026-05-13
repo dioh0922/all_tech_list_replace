@@ -85,6 +85,11 @@ export const getVectors = async () => {
   return { vectors };
 };
 
+export const getMeta = async () => {
+  const meta = await vectorDb.prepare('SELECT * FROM tech_metadata').all();
+  return { meta };
+};
+
 export const searchNearVector = async (text: string) => {
   const inputEmbedding = await generateEmbedding(text)
   const results = vectorDb.prepare(`
