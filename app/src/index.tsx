@@ -39,7 +39,7 @@ import {
 } from './vector.js'
 import { generateIdea } from './genai.js'
 import { create } from 'domain'
-
+import { cors } from 'hono/cors'
 
 type Variables = JwtVariables
 
@@ -54,6 +54,14 @@ app.get('/static/style.css', async (c) => {
     'Content-Type': 'text/css',
   })
 })
+
+app.use(
+  '/api/dump/*', // CORSを適用するパスを指定
+  cors({
+    origin: '*', // 許可するフロントエンドのURL
+    allowMethods: ['GET', 'OPTIONS'], // 許可するメソッド
+  })
+)
 
 app.get('/', async (c) => {
   const isLogIn = isLoggedIn(c)
