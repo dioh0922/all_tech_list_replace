@@ -37,8 +37,7 @@ import {
   deleteVectorById, 
   selectVectorByItem 
 } from './vector.js'
-import { generateIdea } from './genai.js'
-import { create } from 'domain'
+import { generateIdea, generateEmbedding } from './genai.js'
 import { cors } from 'hono/cors'
 
 type Variables = JwtVariables
@@ -57,6 +56,14 @@ app.get('/static/style.css', async (c) => {
 
 app.use(
   '/api/dump/*', // CORSを適用するパスを指定
+  cors({
+    origin: '*', // 許可するフロントエンドのURL
+    allowMethods: ['GET', 'OPTIONS'], // 許可するメソッド
+  })
+)
+
+app.use(
+  '/api/ext/*', // CORSを適用するパスを指定
   cors({
     origin: '*', // 許可するフロントエンドのURL
     allowMethods: ['GET', 'OPTIONS'], // 許可するメソッド
@@ -289,6 +296,14 @@ app.post('/ask', async (c) => {
   return c.render(
     <VectorResult question={question} result={answer} />
   )
+})
+
+app.post('/api/ext/conv', async(c) => {
+  const formData = await c.req.formData()
+  const question = formData.get('question') as string
+
+  const convertResult = await generateEmbedding(question)
+  return c.json(convertResult)
 })
 
 serve({
