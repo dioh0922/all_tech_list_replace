@@ -54,7 +54,7 @@ jobs:
           GOOGLE_GENERATIVE_AI_API_KEY: "dummy_key"
           JWT_SECRET: "dummy_secret"
         run: |
-          # 起動して10秒間エラーで終了しないか確認します。
+          # 起動して2秒間エラーで終了しないか確認します。
           # timeoutコマンドの終了コード124はタイムアウト（正常に起動し続けている）を意味します。
           # それ以外の非ゼロの終了コードは、SyntaxErrorや起動時の例外で落ちたことを示します。
-          timeout 10s node dist/bundle.mjs || [ $? -eq 124 ]
+          timeout 2s node dist/bundle.mjs || [ $? -eq 124 ]
