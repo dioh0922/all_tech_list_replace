@@ -249,7 +249,17 @@ app.get('/api/dump', async (c) => {
 app.get('/api/dump/vector', async (c) => {
   try {
     const { vectors } = await getVectors();
-    return c.json(vectors)
+    const response = vectors.map((e: any) => {
+      const buffer = e.embedding;
+      const embeddingArray = Array.from(
+        new Float32Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / 4)
+      );
+      return {
+        ...e,
+        embedding: embeddingArray
+      }
+    })
+    return c.json(response)
   } catch (error) {
     return c.json({ error: 'Failed to fetch URL' }, 500)
   }
