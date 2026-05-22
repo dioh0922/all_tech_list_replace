@@ -1,39 +1,25 @@
 import Database from 'better-sqlite3';
-import * as sqlite_vss from 'sqlite-vss';
+import * as sqlite_vec from 'sqlite-vec';
 import { generateEmbedding } from './genai.js';
 import { mkdir } from 'fs/promises';
 
 await mkdir('./db/sqlite', { recursive: true });
 const vectorDb = new Database('./db/sqlite/tech_assets.db');
 
-// sqlite-vss エクステンションのロード
-const loadExtension = (db: any, getPathFn: () => string) => {
-  const path = getPathFn();
-  // better-sqlite3 (SQLite) は Linux で .so を自動補完するため、拡張子を除去して渡す
-  const pathWithoutExt = path.replace(/\.(so|dylib|dll)$/, "");
-
-  try {
-    db.loadExtension(pathWithoutExt);
-    console.log(`Successfully loaded extension: ${pathWithoutExt}`);
-  } catch (e: any) {
-    console.error(`Failed to load extension from ${pathWithoutExt}. Error: ${e.message}`);
-    // フォールバックとして元のパスでも試すが、エラーは再スローする
-    try {
-      db.loadExtension(path);
-      console.log(`Successfully loaded extension (fallback): ${path}`);
-    } catch (fallbackError: any) {
-      console.error(`Fallback failed for ${path}. Error: ${fallbackError.message}`);
-      throw e; // 最初のエラーをスローする
-    }
-  }
-};
-
-
-const vss = sqlite_vss as any;
-loadExtension(vectorDb, vss.getVectorLoadablePath);
-loadExtension(vectorDb, vss.getVssLoadablePath);
+// sqlite-vec エクステンションのロード
+sqlite_vec.load(vectorDb);
 
 // テーブルの初期化
+try {
+  // vss0 モジュールがロードされていないと、vss0 テーブルに対する DROP TABLE は失敗することがある
+  // そのため、ここでは仮想テーブルを直接ドロップせず、エラーを無視するか、
+  // もし移行が必要ならファイルを削除する運用を推奨する。
+  // ここでは tech_vectors が vec0 であることを前提とする。
+  vectorDb.exec(`DROP TABLE IF EXISTS tech_vectors;`);
+} catch (e) {
+  // エラーを無視
+}
+
 vectorDb.exec(`
   CREATE TABLE IF NOT EXISTS tech_metadata (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -42,8 +28,8 @@ vectorDb.exec(`
     createDate TEXT,
     description TEXT
   );
-  CREATE VIRTUAL TABLE IF NOT EXISTS tech_vectors USING vss0(
-    embedding(768)
+  CREATE VIRTUAL TABLE IF NOT EXISTS tech_vectors USING vec0(
+    embedding float[768]
   );
 `);
 
@@ -55,7 +41,7 @@ export const saveToVector = async (items: any[]) => {
     'INSERT INTO tech_vectors (rowid, embedding) VALUES (?, ?)'
   );
 
-  // 既存データの削除（初期化時にDROPしているので、ここでは不要だが念のため）
+  // 既存データの削除
   vectorDb.prepare('DELETE FROM tech_metadata').run();
   vectorDb.prepare('DELETE FROM tech_vectors').run();
 
@@ -71,8 +57,9 @@ export const saveToVector = async (items: any[]) => {
   // DBへの書き込み
   for (const { item, embedding } of results) {
     const result = insertMetadata.run(item.projectName, item.techName, item.createDate, item.description);
-    const rowid = result.lastInsertRowid;
-    insertVector.run(rowid, JSON.stringify(embedding));
+    const id = result.lastInsertRowid;
+    // sqlite-vec (vec0) は主キーに厳密な整数を要求するため、BigInt() を使用する
+    insertVector.run(BigInt(id), new Float32Array(embedding ?? []));
   }
 };
 
@@ -96,10 +83,10 @@ export const searchNearVector = async (text: string) => {
     SELECT tm.projectName, tm.techName, tm.createDate, tm.description 
     FROM tech_vectors v
     JOIN tech_metadata tm ON v.rowid = tm.id
-    WHERE vss_search(v.embedding, vss_search_params(?, 5))
-    ORDER BY v.distance ASC
-    LIMIT 5;
-  `).all(JSON.stringify(inputEmbedding))
+    WHERE v.embedding MATCH ?
+      AND k = 5
+    ORDER BY distance
+  `).all(new Float32Array(inputEmbedding ?? []))
   return results;
 }
 
@@ -113,19 +100,20 @@ export const addVector = async (item: any) => {
     'INSERT INTO tech_vectors (rowid, embedding) VALUES (?, ?)'
   )
   const result = insertMetadata.run(item.projectName, item.techName, item.createDate, item.description);
-  const rowid = result.lastInsertRowid;
-  insertVector.run(rowid, JSON.stringify(embedding));
+  const id = result.lastInsertRowid;
+  // sqlite-vec (vec0) は主キーに厳密な整数を要求するため、BigInt() を使用する
+  insertVector.run(BigInt(id), new Float32Array(embedding ?? []));
 }
 
 export const selectVectorByItem = async (item: any) => {
   const selectVector = vectorDb.prepare('SELECT * FROM tech_metadata WHERE projectName = ? AND techName = ?')
   .get(item.projectName, item.techName) as any
-  return selectVector.id
+  return selectVector?.id ?? null
 }
 
 export const deleteVectorById = async (id: number) => {
   vectorDb.prepare('DELETE FROM tech_metadata WHERE id = ?').run(id);
-  vectorDb.prepare('DELETE FROM tech_vectors WHERE rowid = ?').run(id);
+  vectorDb.prepare('DELETE FROM tech_vectors WHERE rowid = ?').run(BigInt(id));
 }
 
 export const isEmpty = () => {
