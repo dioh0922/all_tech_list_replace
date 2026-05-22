@@ -177,7 +177,10 @@ app.post('/delete/:id', authMiddleware, async (c) => {
   const targetItem = await selectTechById(Number(id))
 
   const vectorId = await selectVectorByItem(targetItem[0])
-  await deleteVectorById(vectorId)
+
+  if(vectorId){
+    await deleteVectorById(vectorId)
+  }
   await deleteTechById(Number(id))
 
   return c.redirect(`${BASE_PATH}/`)
@@ -297,8 +300,11 @@ app.post('/ask', async (c) => {
   }
 
   // 入力をベクトル化
-  // sqlite-vssでベクトル検索
+  // sqlite-vecでベクトル検索
   const searchResults = await searchNearVector(question);
+  if(searchResults.length === 0){
+    return c.render(<VectorResult question={question} result={"No vector available. Please upload data first."} />)
+  }
 
   // 近いベクトルのメタデータをもとに回答生成
   const answer = await generateIdea(question, searchResults);
